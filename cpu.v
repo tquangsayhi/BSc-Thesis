@@ -155,9 +155,9 @@ output reg [31:0] btb_target_pc_out
                 pc_out <= pc_in;
                 instruction_out <= instruction_in;
                 pc_plus_4_out <= pc_plus_4_in;
-                btb_hit_out <= btb_hit_out;
-                btb_prediction_out <= btb_prediction_out;
-                btb_target_pc_out <= btb_target_pc_out;
+                btb_hit_out <= btb_hit_in;
+                btb_prediction_out <= btb_prediction_in;
+                btb_target_pc_out <= btb_target_pc_in;
             end
         end
     end
@@ -269,7 +269,7 @@ module main_control_unit (
             7'b0010111: begin 
                 ALUSrc   = 1'b1;
                 RegWrite = 1'b1;
-                ALUSrc   = 1'b1;
+                ALUSrcA   = 1'b1;
                 ALUOp    = 2'b00; // ALU will add PC + Immediate
             end
             7'b1100111: begin
@@ -433,9 +433,9 @@ output reg [31:0] btb_target_pc_out
             pc_plus_4_out <= pc_plus_4_in;
             ALUSrcA_out <= ALUSrcA_in;
             JALR_signal_out <= JALR_signal_in;
-            btb_hit_out <= btb_hit_out;
-            btb_prediction_out <= btb_prediction_out;
-            btb_target_pc_out <= btb_target_pc_out;
+            btb_hit_out <= btb_hit_in;
+            btb_prediction_out <= btb_prediction_in;
+            btb_target_pc_out <= btb_target_pc_in;
         end
         
     end
@@ -856,8 +856,8 @@ module performance_counters (
             end
 
             // THE PERFECT INSTRUCTION COUNTER
-            if (!stall_signal && valid_inst) begin
-                instruction_count <= instruction_count + 1;
+            if (valid_inst) begin
+                instruction_count <= instruction_count + 64'd1;
             end
         end
     end
@@ -975,6 +975,7 @@ module btb_control(
 );
 
     wire [1:0] next_prediction;       // Use for the branch instruction only
+    reg  [31:0] jalr_target; 
 
     // Instantiate the FSM outside the procedural block
     predictor_fsm Predictor (
@@ -984,6 +985,8 @@ module btb_control(
     );
 
     always @(*) begin
+        jalr_target   = {alu_result[31:1], 1'b0};
+
         flush         = 1'b0;
         write_enable  = 1'b0;
         ex_pc         = id_ex_pc;
@@ -997,14 +1000,14 @@ module btb_control(
             // 2nd Priority: JALR or normal branch instruction
             if (id_ex_JALR_signal) begin
                 ex_new_fsm = 2'b00; // Jumps are always Strongly Taken
-                if ((btb_target_pc == alu_result) && (!btb_prediction[1])) begin
+                if ((btb_target_pc == jalr_target) && (!btb_prediction[1])) begin
                     write_enable = 1'b0;
                     flush = 1'b0;
                 end else begin
                     write_enable = 1'b1;
                     flush = 1'b1;
-                    branch_target = alu_result;
-                    ex_target_pc  = alu_result;
+                    branch_target = jalr_target;
+                    ex_target_pc  = jalr_target;
                 end
             end
             
@@ -1039,8 +1042,8 @@ module btb_control(
                 write_enable = 1'b1;
                 ex_new_fsm = 2'b00;
                 flush = 1'b1;
-                branch_target = alu_result;
-                ex_target_pc  = alu_result;
+                branch_target = jalr_target;
+                ex_target_pc  = jalr_target;
             end
             else if (id_ex_Jump) begin
                 write_enable = 1'b1;
@@ -1069,8 +1072,10 @@ endmodule
 // ============================================================================
 // RISC-V TOP MODULE (The Full CPU)
 // ============================================================================
-module RISC_V (input clk, input aresetn
-
+module RISC_V (input clk, input aresetn,
+    output wire [31:0] mmio_address,
+    output wire [31:0] mmio_write_data,
+    output wire        mmio_write_enable
 );
     wire rst = ~aresetn; // Active high reset for internal modules
     wire [31:0] pc_wire, pc_out_wire, pc_next_wire, branch_target, WB_data_wire, read_data1, reg_to_mux, immgen_wire, WB_wire, mux_to_ALU, read_data_wire, fetch_instruction_wire, ALU_operand_a, forwarded_to_MUX_B, alu_operand_a_final;
@@ -1080,7 +1085,7 @@ module RISC_V (input clk, input aresetn
     wire [31:0] id_ex_pc, id_ex_instruction, id_ex_read_data1, id_ex_reg_to_mux, id_ex_immgen_wire, id_ex_pc_plus_4;
     wire [4:0] id_ex_rd;
     // EX_MEM Pipeline Register Wires
-    wire [31:0] ex_mem_alu_result, ex_mem_reg_to_mux, ex_mem_pc_plus_4;
+    wire [31:0] ex_mem_alu_result, ex_mem_reg_to_mux, ex_mem_pc_plus_4, ex_mem_forward_data;
     wire [4:0] ex_mem_rd;
     // MEM_WB Pipeline Register Wires
     wire [31:0] mem_wb_pc_plus_4, mem_wb_read_data_memory, mem_wb_alu_result;
@@ -1161,6 +1166,14 @@ module RISC_V (input clk, input aresetn
     instruction_memory instruction_memory(
         .read_address(pc_out_wire), .instruction_out(fetch_instruction_wire)
     );
+
+    // Address Decoder for MMIO 
+    wire is_mmio = (ex_mem_alu_result[31:16] == 16'h4000);
+
+    assign mmio_address      = ex_mem_alu_result;
+    assign mmio_write_data   = ex_mem_reg_to_mux;
+        
+    assign mmio_write_enable = ex_mem_MemWrite && (is_mmio);
 
     if_id_register IF_ID (
     .clk(clk), .reset(rst),
@@ -1272,7 +1285,7 @@ module RISC_V (input clk, input aresetn
         .rd_out(ex_mem_rd)
     );
     data_memory Data_Mem (
-        .clk(clk), .MemRead(ex_mem_MemRead), .MemWrite(ex_mem_MemWrite & (~is_mmio)),
+        .clk(clk), .MemRead(ex_mem_MemRead & (~is_mmio)), .MemWrite(ex_mem_MemWrite & (~is_mmio)),
         .address(ex_mem_alu_result), .write_data(ex_mem_reg_to_mux), .read_data(read_data_wire) 
     );
 
@@ -1307,10 +1320,14 @@ module RISC_V (input clk, input aresetn
         .MEM_WB_rd(mem_wb_rd), .MEM_WB_RegWrite(mem_wb_RegWrite),
         .ForwardA(ForwardA), .ForwardB(ForwardB)
     );
+
+    assign ex_mem_forward_data =
+    ex_mem_Jump ? ex_mem_pc_plus_4 : ex_mem_alu_result;
+
     mux_3_1 MUX_ForwardA (
         .input0(id_ex_read_data1), 
         .input1(WB_data_wire), 
-        .input2(ex_mem_alu_result), 
+        .input2(ex_mem_forward_data), 
         .select(ForwardA), 
         .mux_out(ALU_operand_a) // Forwarded data for ALU operand A
     );
@@ -1318,7 +1335,7 @@ module RISC_V (input clk, input aresetn
     mux_3_1 MUX_ForwardB (
         .input0(id_ex_reg_to_mux), 
         .input1(WB_data_wire), 
-        .input2(ex_mem_alu_result), 
+        .input2(ex_mem_forward_data), 
         .select(ForwardB), 
         .mux_out(forwarded_to_MUX_B) // Forwarded data for ALU operand B
     );
@@ -1372,8 +1389,8 @@ module RISC_V (input clk, input aresetn
         .clk(clk),
         .reset(rst),
         .branch_in_ex(id_ex_Branch), 
-        .branch_taken(id_ex_Branch & Zero), 
-        .jump_taken(id_ex_Jump),            
+        .branch_taken(flush && id_ex_Branch), //branch_misprediction
+        .jump_taken(flush && id_ex_Jump),  //jump_misprediction         
         .stall_signal(ControlStall), 
         .valid_inst(id_ex_instruction != 32'b0), // Only count if not a bubble
         .cycle_count(sim_cycles),

@@ -768,8 +768,8 @@ module performance_counters (
             end
 
             // THE PERFECT INSTRUCTION COUNTER
-            if (!stall_signal && valid_inst) begin
-                instruction_count <= instruction_count + 1;
+            if (valid_inst) begin
+                instruction_count <= instruction_count + 64'd1;
             end
         end
     end
