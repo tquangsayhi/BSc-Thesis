@@ -195,7 +195,7 @@ module main_control_unit (
             7'b0010111: begin 
                 ALUSrc   = 1'b1;
                 RegWrite = 1'b1;
-                ALUSrc   = 1'b1;
+                ALUSrcA   = 1'b1;
                 ALUOp    = 2'b00; // ALU will add PC + Immediate
             end
             7'b1100111: begin
@@ -1055,8 +1055,8 @@ module RISC_V (input clk, input aresetn,
         .clk(clk),
         .reset(rst),
         .branch_in_ex(id_ex_Branch), 
-        .branch_taken(id_ex_Branch & Zero), 
-        .jump_taken(id_ex_Jump),            
+        .branch_taken(flush && id_ex_Branch), 
+        .jump_taken(flush && id_ex_Jump),            
         .stall_signal(ControlStall), 
         .valid_inst(id_ex_instruction != 32'b0), // Only count if not a bubble
         .cycle_count(sim_cycles),
