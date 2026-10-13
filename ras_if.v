@@ -1,5 +1,3 @@
-// ADDED (RAS): Speculative RAS in IF. Decode the currently fetched instruction.
-// Read the OLD top for prediction; update once at the accepting clock edge.
 module ras_if #(
     parameter DEPTH = 8,
     parameter COUNT_WIDTH = $clog2(DEPTH + 1)

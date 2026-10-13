@@ -1,6 +1,3 @@
-// ADDED (RAS): Shared storage used independently by ras_if and ras_ex.
-// Verilog-2005; synthesizable fixed-depth shift stack. Entry 0 is the top.
-// Push at full depth drops the oldest entry. Empty pop is a no-op.
 module ras_stack #(
     parameter DEPTH = 8,
     parameter COUNT_WIDTH = $clog2(DEPTH + 1)

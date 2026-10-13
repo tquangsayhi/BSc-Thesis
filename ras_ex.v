@@ -1,5 +1,3 @@
-// ADDED (RAS): Resolved RAS in EX, separate from the speculative IF stack.
-// Assumes this CPU resolves control flow in order at EX, with no later traps.
 module ras_ex #(
     parameter DEPTH = 8,
     parameter COUNT_WIDTH = $clog2(DEPTH + 1)
