@@ -1134,7 +1134,6 @@ module RISC_V (input clk, input aresetn,
         .pc_in(pc_out_wire), .pc_next(pc_next_wire)
     );
 
-    //assign final_branch_target = (id_ex_JALR_signal)? WB_wire : branch_target; // Use ALU result for JALR, branch target for branches
 
     pc_mux PC_MUX (
         .pc_plus_4(pc_next_wire), .btb_hit(if_btb_hit),
