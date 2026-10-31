@@ -1,0 +1,47 @@
+========================================
+       MATRIX ADDITION VERIFICATION     
+CPU Version: Baseline Version
+PASS: MMIO result matches
+PASS: all 16 matrix elements match
+========================================
+         THESIS CPU METRICS             
+FINAL C RESULT:     160
+Total Cycles:       1135
+Total Instructions: 866
+Total Branches:     42
+Branch Flushes:     21
+Jump Flushes:       22
+CPI:                1.311
+========================================
+
+========================================
+       MATRIX ADDITION VERIFICATION     
+CPU Version: BTB-only Version
+PASS: MMIO result matches
+PASS: all 16 matrix elements match
+========================================
+         THESIS CPU METRICS             
+FINAL C RESULT:     160
+Total Cycles:       1073
+Total Instructions: 866
+Total Branches:     42
+Branch Flushes:     8
+Jump Flushes:       4
+CPI:                1.239
+========================================
+
+========================================
+       MATRIX ADDITION VERIFICATION     
+CPU Version: BTB + RAS Version
+PASS: MMIO result matches
+PASS: all 16 matrix elements match
+========================================
+         THESIS CPU METRICS             
+FINAL C RESULT:     160
+Total Cycles:       1073
+Total Instructions: 866
+Total Branches:     42
+Branch Flushes:     8
+Jump Flushes:       4
+CPI:                1.239
+========================================

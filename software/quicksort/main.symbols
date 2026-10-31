@@ -1,0 +1,10 @@
+00000000 T _start
+0000002c t halt
+00000030 T swap
+0000007c T partition
+00000188 T quicksort
+00000214 T main
+00000288 D data
+000002b0 D _bss_end
+000002b0 D _bss_start
+00004000 D __stack_top

@@ -1,0 +1,55 @@
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+BRAM             0x0000000000000000 0x0000000000004000 xrw
+*default*        0x0000000000000000 0xffffffffffffffff
+
+Linker script and memory map
+
+LOAD /tmp/ccXnIkDf.o
+LOAD /tmp/ccE6t8QO.o
+
+.text           0x0000000000000000       0xac
+ *(.text.init)
+ .text.init     0x0000000000000000       0x30 /tmp/ccXnIkDf.o
+                0x0000000000000000                _start
+ *(.text*)
+ .text          0x0000000000000030        0x0 /tmp/ccXnIkDf.o
+ .text          0x0000000000000030       0x7c /tmp/ccE6t8QO.o
+                0x0000000000000030                main
+
+.rela.dyn       0x00000000000000ac        0x0
+ .rela.text.init
+                0x00000000000000ac        0x0 /tmp/ccXnIkDf.o
+
+.rodata
+ *(.rodata*)
+
+.data           0x00000000000000ac       0x28
+ *(.data*)
+ .data          0x00000000000000ac        0x0 /tmp/ccXnIkDf.o
+ .data          0x00000000000000ac       0x28 /tmp/ccE6t8QO.o
+                0x00000000000000ac                data
+ *(.sdata*)
+
+.bss            0x00000000000000d4        0x0
+                0x00000000000000d4                _bss_start = .
+ *(.bss*)
+ .bss           0x00000000000000d4        0x0 /tmp/ccXnIkDf.o
+ .bss           0x00000000000000d4        0x0 /tmp/ccE6t8QO.o
+ *(.sbss*)
+                0x00000000000000d4                _bss_end = .
+                0x0000000000004000                __stack_top = (ORIGIN (BRAM) + LENGTH (BRAM))
+OUTPUT(main.elf elf32-littleriscv)
+
+.riscv.attributes
+                0x0000000000000000       0x1c
+ .riscv.attributes
+                0x0000000000000000       0x1a /tmp/ccXnIkDf.o
+ .riscv.attributes
+                0x000000000000001a       0x1c /tmp/ccE6t8QO.o
+
+.comment        0x0000000000000000        0xf
+ .comment       0x0000000000000000        0xf /tmp/ccE6t8QO.o
+                                         0x10 (size before relaxing)

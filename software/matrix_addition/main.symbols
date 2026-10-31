@@ -1,0 +1,9 @@
+00000000 T _start
+0000002c t halt
+00000030 T main
+00000148 D matA
+00000188 D matB
+000001c8 B _bss_start
+000001c8 B matC
+00000208 B _bss_end
+00004000 B __stack_top

@@ -1,0 +1,44 @@
+========================================
+         ARRAY SUM VERIFICATION         
+CPU Version: Baseline Version
+PASS: array sum matches expected value 550
+========================================
+         THESIS CPU METRICS             
+FINAL C RESULT:     550
+Total Cycles:       231
+Total Instructions: 172
+Total Branches:     12
+Branch Flushes:     11
+Jump Flushes:       2
+CPI:                1.343
+========================================
+
+========================================
+         ARRAY SUM VERIFICATION         
+CPU Version: BTB-only Version
+PASS: array sum matches expected value 550
+========================================
+         THESIS CPU METRICS             
+FINAL C RESULT:     550
+Total Cycles:       215
+Total Instructions: 172
+Total Branches:     12
+Branch Flushes:     3
+Jump Flushes:       2
+CPI:                1.250
+========================================
+
+========================================
+         ARRAY SUM VERIFICATION         
+CPU Version: BTB + RAS Version
+PASS: array sum matches expected value 550
+========================================
+         THESIS CPU METRICS             
+FINAL C RESULT:     550
+Total Cycles:       215
+Total Instructions: 172
+Total Branches:     12
+Branch Flushes:     3
+Jump Flushes:       2
+CPI:                1.250
+========================================

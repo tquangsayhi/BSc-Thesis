@@ -1,0 +1,47 @@
+========================================
+       QUICKSORT VERIFICATION           
+CPU Version: Baseline Version
+PASS: MMIO result matches
+PASS: all 10 array elements match
+========================================
+         THESIS CPU METRICS             
+FINAL C RESULT:     107
+Total Cycles:       2001
+Total Instructions: 1398
+Total Branches:     68
+Branch Flushes:     45
+Jump Flushes:       79
+CPI:                1.431
+========================================
+
+========================================
+       QUICKSORT VERIFICATION           
+CPU Version: BTB-only Version
+PASS: MMIO result matches
+PASS: all 10 array elements match
+========================================
+         THESIS CPU METRICS             
+FINAL C RESULT:     107
+Total Cycles:       1857
+Total Instructions: 1398
+Total Branches:     68
+Branch Flushes:     24
+Jump Flushes:       28
+CPI:                1.328
+========================================
+
+========================================
+       QUICKSORT VERIFICATION           
+CPU Version: BTB + RAS Version
+PASS: MMIO result matches
+PASS: all 10 array elements match
+========================================
+         THESIS CPU METRICS             
+FINAL C RESULT:     107
+Total Cycles:       1825
+Total Instructions: 1398
+Total Branches:     68
+Branch Flushes:     24
+Jump Flushes:       12
+CPI:                1.305
+========================================
