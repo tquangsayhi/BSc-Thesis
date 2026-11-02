@@ -48,12 +48,12 @@ The target platform is the **Zynq-7020 FPGA on the PYNQ-Z1 board**. The reported
 |---|---|
 | `rtl/` | Complete CPU implementations |
 | `sim/` | Benchmark-specific verification testbenches |
-| `software/` | Shared build files and benchmark-specific source/firmware artifacts |
+| `software/` | Shared build files and the firmware artifacts built for each benchmark |
 | `result/` | Simulation logs for the three CPU configurations, grouped by benchmark |
-| `benchmarks/` | Benchmark C sources retained for reference |
-| `reference modules/` | Individual prediction modules retained for reference |
+| `benchmarks/` | C sources of the three evaluated benchmarks |
+| `reference modules/` | Individual prediction modules retained for reference; see the note below |
 
-The source saved alongside each benchmark's firmware in `software/` identifies the program used for that build.
+Each benchmark's C source is in `benchmarks/`. The matching firmware and inspection files are in `software/array/`, `software/matrix_addition/` and `software/quicksort/`.
 
 ## CPU configurations
 
@@ -66,6 +66,8 @@ The source saved alongside each benchmark's firmware in `software/` identifies t
 Each RTL file contains its complete set of modules and uses the top-level module name `RISC_V`.
 
 **Compile only one complete CPU implementation at a time.** Do not add the files in `reference modules/` alongside a complete implementation: their module definitions overlap.
+
+The files in `reference modules/` are an earlier, standalone snapshot of the prediction logic and are **not** the versions that were simulated. `btb_control.v` there lacks the JALR bit-zero clearing present in `cpu_btb.v`, and it differs further from the `btb_control` in `cpu_ras.v`, which ignores bubbles and flushes whenever the saved predicted next PC differs from the actual next PC. The other reference modules differ from `cpu_ras.v` only in comments. The three files in `rtl/` are the authoritative source for all reported results.
 
 The RAS implementation also exposes `RAS_ENABLE`: setting it to `0` disables the RAS, while `1` enables it.
 
@@ -96,7 +98,7 @@ The implemented recognition rules are:
 
 JALR recognition requires `funct3=000`. Other link-register conventions, including `x5`, are outside this implementation.
 
-Prediction uses the stack top before the pop. EX checks the actual target, including cases where a nonzero JALR immediate or a modified `x1` makes the saved address incorrect.
+Prediction uses the stack top before the pop. EX compares the actual next PC with the predicted one, so a return whose saved address is wrong (for example, because of a nonzero JALR immediate or a modified `x1`) is designed to be detected and recovered. The three benchmarks do not exercise these cases directly.
 
 On a pipeline flush, the IF stack restores **all entries and its count from the EX stack's next state**. This retains the resolving instruction's push/pop and removes younger speculative changes.
 
@@ -139,26 +141,26 @@ The compiler flags used for evaluation are:
 
 `-mno-relax` disables relaxation because the custom startup does not initialize `gp`.
 
+All benchmarks are built at `-O0`. Unoptimised code keeps its variables in memory and makes many calls, so the cycle reductions reported here apply to this build style and may differ at higher optimization levels.
+
 ### Building a benchmark
 
-The current script expects `start.s` and `link.ld` in the working directory. From `software/`, select the benchmark source:
+The script expects `start.s` and `link.ld` in the working directory and takes the benchmark source as its argument. From `software/`:
 
 ```bash
 cd software
-bash compile.sh quicksort/main.c
+bash compile.sh ../benchmarks/quicksort_bench.c
 ```
 
 For the other benchmarks:
 
 ```bash
-bash compile.sh array/main.c
+bash compile.sh ../benchmarks/array_bench.c
 ```
 
 ```bash
-bash compile.sh matrix_addition/main.c
+bash compile.sh ../benchmarks/matrix_bench.c
 ```
-
-These commands assume the archived source in each directory is named `main.c`; substitute its actual filename if different.
 
 The script writes its outputs into the current working directory:
 
@@ -281,4 +283,4 @@ The instruction counter measures EX-stage instructions rather than WB retirement
 
 Flush counters measure recovery events, not taken-branch counts. In the baseline, they count the corresponding control-flow redirects.
 
-The results demonstrate correct benchmark outputs and reduced simulated cycle counts for these workloads. They do not establish complete RV32I compliance, exhaustive RAS recovery coverage or achieved FPGA timing. The 20 ns simulation clock does not establish an FPGA maximum operating frequency.
+The results demonstrate correct benchmark outputs and reduced simulated cycle counts for these workloads. They do not establish complete RV32I compliance, exhaustive RAS recovery coverage or achieved FPGA timing. Verification is limited to the three benchmarks above, each run on one input set. The 20 ns simulation clock does not establish an FPGA maximum operating frequency.
